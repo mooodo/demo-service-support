@@ -145,7 +145,7 @@ public class OrmController implements ApplicationContextAware {
 				field.setAccessible(true);
 				Class<?> clazz = field.getType();
 				String value = json.get(field.getName());
-				field.set(vo, bind(clazz, value));
+				if(value!=null) field.set(vo, bind(clazz, value));
 				field.setAccessible(false);
 			}
 			return vo;

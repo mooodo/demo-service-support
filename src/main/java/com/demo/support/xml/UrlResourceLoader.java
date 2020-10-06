@@ -34,6 +34,7 @@ public class UrlResourceLoader
 		PathMatchingResourcePatternResolver resolver = 
 				new PathMatchingResourcePatternResolver(this.clazz.getClassLoader());
 		Resource[] loaders = resolver.getResources(path);
+		log.debug("read files with UrlResourceLoader");
 		for(int i=0; i<loaders.length; i++){
 			printLog(loaders[i]);
 			InputStream is = loaders[i].getInputStream();

@@ -32,6 +32,7 @@ public class ClassPathResourceLoader
 	public boolean loadResource(ResourceCallBack callback, String path) throws IOException{
 		boolean success = false;
 		Resource resource = new ClassPathResource(path, clazz);
+		log.debug("read file with ClassPathResourceLoader");
 		log.debug(resource.getFile().getCanonicalFile());
 		InputStream is = resource.getInputStream();
 		if(is==null){return false;}

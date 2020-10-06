@@ -47,7 +47,7 @@ public abstract class GenericFactory<T extends Entity<String>> extends XmlBuildF
 			T bean = clazz.newInstance();
 			loadBean(element, bean);
 		} catch (InstantiationException | IllegalAccessException e) {
-			throw new RuntimeException("", e);
+			throw new RuntimeException("error when create products for factory!", e);
 		}
 	}
 	

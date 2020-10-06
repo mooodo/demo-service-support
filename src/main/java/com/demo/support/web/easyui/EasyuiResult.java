@@ -3,7 +3,7 @@
  */
 package com.demo.support.web.easyui;
 
-import java.util.List;
+import java.util.Collection;
 
 import com.demo.support.entity.ResultSet;
 
@@ -13,7 +13,7 @@ import com.demo.support.entity.ResultSet;
  */
 public class EasyuiResult extends ResultSet {
 	private int retCode = 0;
-	private List<?> footer = null;
+	private Collection<?> footer = null;
 	
 	public EasyuiResult(ResultSet resultSet) {
 		this.setData(resultSet.getData());
@@ -49,25 +49,25 @@ public class EasyuiResult extends ResultSet {
 	/**
 	 * @return the rows
 	 */
-	public List<?> getRows() {
+	public Collection<?> getRows() {
 		return this.getData();
 	}
 	/**
 	 * @param rows the rows to set
 	 */
-	public void setRows(List<?> rows) {
+	public void setRows(Collection<?> rows) {
 		this.setData(rows);
 	}
 	/**
 	 * @return the footer
 	 */
-	public List<?> getFooter() {
+	public Collection<?> getFooter() {
 		return footer;
 	}
 	/**
 	 * @param footer the footer to set
 	 */
-	public void setFooter(List<?> footer) {
+	public void setFooter(Collection<?> footer) {
 		this.footer = footer;
 	}
 	

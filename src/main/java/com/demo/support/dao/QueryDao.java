@@ -3,7 +3,7 @@
  */
 package com.demo.support.dao;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -16,7 +16,7 @@ public interface QueryDao {
 	 * @param params the parameters the query need
 	 * @return the result set of query
 	 */
-	public List<?> query(Map<String, Object> params);
+	public Collection<?> query(Map<String, Object> params);
 	/**
 	 * get count of the query
 	 * @param params the parameters the query need

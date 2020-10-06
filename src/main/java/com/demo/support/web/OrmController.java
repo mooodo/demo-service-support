@@ -89,9 +89,11 @@ public class OrmController {
 	private Method getMethod(Object service, String name) {
 		if(name==null||name.isEmpty()) throw new OrmException("The method name is empty!");
 		Method[] allOfMethods = service.getClass().getDeclaredMethods();
+		Method rtn = null;
 		for(Method method : allOfMethods) {
-			if(method.getName().equals(name)) return method;
+			if(method.getName().equals(name)) rtn = method;
 		}
+		if(rtn!=null) return rtn; //if have override, return the last one.
 		throw new OrmException("No such method["+name+"] in the service["+service.getClass().getName()+"]");
 	}
 	
@@ -135,6 +137,7 @@ public class OrmController {
 	private boolean isValueObject(Class<?> clazz) {
 		if(clazz==null) return false;
 		if(clazz.equals(long.class)||clazz.equals(int.class)||clazz.equals(double.class)||clazz.equals(float.class)||clazz.equals(short.class)) return false;
+		if(clazz.isInterface()) return false;
 		if(Number.class.isAssignableFrom(clazz)) return false;
 		if(String.class.isAssignableFrom(clazz)) return false;
 		if(Date.class.isAssignableFrom(clazz)) return false;

@@ -3,7 +3,7 @@
  */
 package com.demo.support.entity;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -11,7 +11,7 @@ import java.util.Map;
  * @author fangang
  */
 public class ResultSet {
-	private List<?> data;
+	private Collection<?> data;
 	private Integer page;
 	private Integer size;
 	private Long count;
@@ -19,13 +19,13 @@ public class ResultSet {
 	/**
 	 * @return the data
 	 */
-	public List<?> getData() {
+	public Collection<?> getData() {
 		return data;
 	}
 	/**
 	 * @param data the data to set
 	 */
-	public void setData(List<?> data) {
+	public void setData(Collection<?> data) {
 		this.data = data;
 	}
 	/**

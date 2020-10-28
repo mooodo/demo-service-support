@@ -41,7 +41,6 @@ public abstract class GenericFactory<T extends Entity<String>> extends XmlBuildF
 	/**
 	 * @param element
 	 */
-	@Override
 	protected void loadBean(Element element) {
 		try {
 			T bean = clazz.newInstance();

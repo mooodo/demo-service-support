@@ -8,34 +8,34 @@ import java.io.InputStream;
 
 
 /**
- * 读取一个文件资源的代理类接口
- * @author 范钢
+ * The interface for reading resources.
+ * @author fangang
  */
 public interface Resource {
 	/**
-	 * 从一个文件中读取并返回一个InputStream
+	 * read resources and return InputStream.
 	 * @return InputStream
 	 * @throws IOException 
 	 */
 	public InputStream getInputStream()throws IOException;
 	
 	/**
-	 * @return 文件资源的相关信息，便于调试和跟踪
+	 * @return get the description of resource for debugging.
 	 */
 	public String getDescription();
 
 	/**
-	 * @param filter 文件过滤器
+	 * @param filter the file filter
 	 */
 	public void setFilter(Filter filter);
 	
 	/**
-	 * @return 文件过滤器
+	 * @return the file filter
 	 */
 	public Filter getFilter();
 	
 	/**
-	 * @return 文件资源的完整文件名（包括路径）
+	 * @return the full filename include the path.
 	 */
 	public String getFileName();
 }

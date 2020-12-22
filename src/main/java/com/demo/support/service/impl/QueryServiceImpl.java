@@ -71,10 +71,10 @@ public class QueryServiceImpl implements QueryService {
 		Object page = params.get("page");
 		Object size = params.get("size");
 		Object count = params.get("count");
-
+		
 		long cnt = (count==null) ? queryDao.count(params) : new Long(count.toString());
 		resultSet.setCount(cnt);
-
+		
 		if( size==null ) return;
 		int p = (page==null)? 0 : new Integer(page.toString());
 		int s = new Integer(size.toString());
@@ -92,6 +92,13 @@ public class QueryServiceImpl implements QueryService {
 	 */
 	private void aggregate(Map<String, Object> params, ResultSet resultSet) {
 		if(params==null||params.isEmpty()) return;
-		//TODO
+		@SuppressWarnings("unchecked")
+		Map<String, String> aggregation = (Map<String, String>)params.get("aggregation");
+		if(aggregation==null||aggregation.isEmpty()) return;
+		
+		@SuppressWarnings("unchecked")
+		Map<String, Object> aggValue = (Map<String, Object>)params.get("aggValue");
+		if(aggValue==null) aggValue = queryDao.aggregate(params);
+		resultSet.setAggregation(aggValue);
 	}
 }

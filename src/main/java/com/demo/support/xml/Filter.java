@@ -4,14 +4,14 @@
 package com.demo.support.xml;
 
 /**
- * 文件过滤器
- * @author 范钢
+ * The file filter
+ * @author fangang
  */
 public abstract class Filter {
 	
 	/**
-	 * @param fileName 文件名
-	 * @return 文件名是否满足过滤条件
+	 * @param fileName the filename pattern such as "*.xml"
+	 * @return whether satisfied the filename pattern.
 	 */
 	public abstract boolean isSatisfied(String fileName);
 }

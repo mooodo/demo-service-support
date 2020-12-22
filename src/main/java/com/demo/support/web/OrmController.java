@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.demo.support.exception.OrmException;
-import com.demo.support.utils.DateUtils;
+import com.demo.support.utils.BeanUtils;
 
 /**
  * The generate controller for CRUD operations by ORM
@@ -118,7 +118,7 @@ public class OrmController {
 				field.setAccessible(true);
 				Class<?> clazz = field.getType();
 				String value = json.get(field.getName());
-				if(value!=null) field.set(vo, bind(clazz, value));
+				if(value!=null) field.set(vo, BeanUtils.bind(clazz, value));
 				field.setAccessible(false);
 			}
 			return vo;
@@ -146,28 +146,6 @@ public class OrmController {
 	}
 	
 	/**
-	 * Downcast the value to the class it is.
-	 * @param clazz
-	 * @param value
-	 * @return the downcast value
-	 */
-	private Object bind(Class<?> clazz, String value) {
-		if(value==null) return value;
-		if(clazz.equals(String.class)) return value;
-		if(clazz.equals(Long.class)||clazz.equals(long.class)) return new Long(value);
-		if(clazz.equals(Integer.class)||clazz.equals(int.class)) return new Integer(value);
-		if(clazz.equals(Double.class)||clazz.equals(double.class)) return new Double(value);
-		if(clazz.equals(Float.class)||clazz.equals(float.class)) return new Float(value);
-		if(clazz.equals(Short.class)||clazz.equals(short.class)) return new Short(value);
-		
-		if(clazz.equals(Date.class)&&value.length()==10) return DateUtils.getDate(value,"yyyy-MM-dd");
-		if(clazz.equals(Date.class)) return DateUtils.getDate(value);
-		
-		//TODO how to bind map, list and set.
-		return value;
-	}
-	
-	/**
 	 * get the arguments that invoke the method need. 
 	 * The first thing is put the value object to the first argument, if it's available. 
 	 * Then put the other arguments in order. 
@@ -190,11 +168,10 @@ public class OrmController {
 		
 		//add the other arguments in order.
 		Parameter[] allOfParameters = method.getParameters();
-		Class<?>[] allOfParameterTypes = method.getParameterTypes();
 		for( ; index<length; index++) {
-			String name = allOfParameters[index].getName();//TODO can't get really name of args
-			Class<?> clazz = allOfParameterTypes[index];
-			Object value = bind(clazz, json.get(name));
+			Parameter parameter = allOfParameters[index];
+			String name = parameter.getName();
+			Object value = BeanUtils.bind(parameter.getParameterizedType(), json.get(name));
 			args.add(value);
 		}
 		return args.toArray();

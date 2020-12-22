@@ -6,24 +6,25 @@ package com.demo.support.xml;
 import java.io.IOException;
 
 /**
- * 读取一个路径中所有文件资源的代理类
+ * read resources by loader.
  * @author 范钢
  */
 public interface ResourcePath {
 	
-	/**从一个路径中读取所有文件并封装到装载器中返回
-	 * @return Array of Resource 装载器集合
+	/**
+	 * read resources by loader
+	 * @return the array of Resources
 	 * @throws IOException
 	 */
 	public Resource[] getResources() throws IOException;
 
 	/**
-	 * @param filter 文件过滤器
+	 * @param filter the file filter
 	 */
 	public void setFilter(Filter filter);
 	
 	/**
-	 * @return 文件过滤器
+	 * @return the file filter
 	 */
 	public Filter getFilter();
 }

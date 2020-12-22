@@ -3,7 +3,6 @@
  */
 package com.demo.support.xml;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -11,30 +10,55 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * 以DOM的方式读取和解析XML文件，并创建工厂的外观模型。
- * 它通过调用initFactory()，从指定的一个或多个XML文件中读取数据，
- * 然后将读取出的数据装载到一个工厂中。
- * <p>该类的所有继承类必须通过对buildFactory()的实现，
- * 具体定义如何将读取出的数据装载到一个工厂中。
- * @author FanGang
+ * The template that read xml files with DOM, and build the factory. 
+ * When create the factory, input a path or list of paths, 
+ * then it reads the resources and build the factory immediately.
+ * <p>
+ * The path can be a file or a direction, such as:
+ * <li>vObj.xml that read from the class local path</li>
+ * <li>src/test/java/com/demo2/support/xml that read from relative path</li>
+ * <li>C:\\demo-service2-support\\src\\test\\java\\com\\demo2\\support\\xml</li>
+ * <li>classpath*:vObj.xml that read from classpath or the classpaths in jar</li>
+ * <li>file:C:\\demo-service2-support\\src\\test\\java\\com\\demo2\\support\\xml</li>
+ * <li>/mapper/genericDaoMapper.xml that read from the context of the project</li>
+ * <p>
+ * Inherit the template and call the initFactory(), 
+ * and then implement the loadBean(element), such as: 
+ * <pre>
+	protected void loadBean(Element element) {
+		String clazz = element.getAttribute("class");
+		String tableName = element.getAttribute("tableName");
+		loadChildNodes(element, vObj);
+	}
+	
+	private void loadChildNodes(Element element) {
+		NodeList nodeList = element.getChildNodes();
+		for(int i=0; i<=nodeList.getLength(); i++) {
+			Node node = nodeList.item(i);
+			if(!(node instanceof Element)) continue;
+			if (node.getNodeName().equals("property")) {
+				Element child = (Element) node;
+				String name = child.getAttribute("name");
+			}
+		}
+	}
+ * </pre>
+ * @author fangang
  */
 public abstract class XmlBuildFactoryTemplate {
-	private static final Log log = LogFactory.getLog(XmlBuildFactoryTemplate.class);
 	private boolean validating = false;
 	private boolean namespaceAware = false;
-	private Filter filter = null;
-	private String[] paths = null;
+	private String[] paths;
 	
 	/**
-	 * 确定在解析XML创建工厂时，是否提供对 XML 名称空间支持的解析器
 	 * @return the namespaceAware
 	 */
 	public boolean isNamespaceAware() {
@@ -42,7 +66,6 @@ public abstract class XmlBuildFactoryTemplate {
 	}
 
 	/**
-	 * 指定由此代码生成的解析器将提供对 XML 名称空间的支持
 	 * @param namespaceAware the namespaceAware to set
 	 */
 	public void setNamespaceAware(boolean namespaceAware) {
@@ -50,7 +73,6 @@ public abstract class XmlBuildFactoryTemplate {
 	}
 
 	/**
-	 * 确定在解析XML创建工厂时，是否解析器在解析时验证 XML 内容。
 	 * @return the validating
 	 */
 	public boolean isValidating() {
@@ -58,7 +80,6 @@ public abstract class XmlBuildFactoryTemplate {
 	}
 
 	/**
-	 * 指定由此代码生成的解析器将验证被解析的 XML 文档
 	 * @param validating the validating to set
 	 */
 	public void setValidating(boolean validating) {
@@ -66,165 +87,81 @@ public abstract class XmlBuildFactoryTemplate {
 	}
 
 	/**
-	 * 获取一个文件过滤器来过滤哪些应对被过滤出来
-	 * 默认的过滤器是将*.xml和*.XML文件过滤出来
-	 * @return the filter 文件过滤器
-	 */
-	public Filter getFilter() {
-		if(filter==null){
-			filter = new Filter(){
-
-				public boolean isSatisfied(String fileName) {
-					if(fileName.endsWith(".xml")||fileName.endsWith(".XML")){return true;}
-					else {return false;}
-				}};
-		}
-		return filter;
-	}
-
-	/**
-	 * 提供一个文件过滤器来过滤文件
-	 * @param filter the filter to set
-	 */
-	public void setFilter(Filter filter) {
-		this.filter = filter;
-	}
-
-	/**
-	 * 初始化工厂。根据路径读取XML文件，将XML文件中的数据装载到工厂中
-	 * @param path XML的路径
+	 * initialize a factory with path
+	 * @param path the path to read xml file
 	 */
 	public void initFactory(String path){
-		if(findOnlyOneFileByClassPath(path)){return;}
-		if(findResourcesByUrl(path)){return;}
-		if(findResourcesByFile(path)){return;}
 		this.paths = new String[]{path};
-	}
-	
-	/**
-	 * 初始化工厂。根据路径列表依次读取XML文件，将XML文件中的数据装载到工厂中
-	 * @param paths 路径列表
-	 */
-	public void initFactory(String[] paths){
-		for(int i=0; i<paths.length; i++){
-			initFactory(paths[i]);
-		}
-		this.paths = paths;
-	}
-	
-	/**
-	 * 重新初始化工厂，初始化所需的参数，为上一次初始化工厂所用的参数。
-	 */
-	public void reloadFactory(){
 		initFactory(this.paths);
 	}
 	
 	/**
-	 * 采用ClassLoader的方式试图查找一个文件，并调用<code>readXmlStream()</code>进行解析
-	 * @param path XML文件的路径
-	 * @return 是否成功
+	 * initialize a factory with list of paths
+	 * @param paths the list of paths to read xml files.
 	 */
-	protected boolean findOnlyOneFileByClassPath(String path){
-		boolean success = false;
+	public void initFactory(String... paths){
 		try {
-			Resource resource = new ClassPathResource(path, this.getClass());
-			resource.setFilter(this.getFilter());
-			InputStream is = resource.getInputStream();
-			if(is==null){return false;}
-			readXmlStream(is);
-			success = true;
-		} catch (SAXException e) {
-			log.debug("Error when findOnlyOneFileByClassPath:"+path,e);
+			ClassPathResourceLoader loader = new ClassPathResourceLoader(this.getClass());
+			loader.loadResource(is->readXmlStream(is), paths);
 		} catch (IOException e) {
-			log.debug("Error when findOnlyOneFileByClassPath:"+path,e);
-		} catch (ParserConfigurationException e) {
-			log.debug("Error when findOnlyOneFileByClassPath:"+path,e);
+			try {
+				FileResourceLoader loader = new FileResourceLoader();
+				loader.loadResource(is->readXmlStream(is), paths);
+			} catch (IOException e1) {
+				try {
+					UrlResourceLoader loader = new UrlResourceLoader();
+					loader.loadResource(is->readXmlStream(is), paths);
+				} catch (IOException e2) {
+					throw new RuntimeException("no found the file", e2);
+				}
+			}
 		}
-		return success;
 	}
 	
 	/**
-	 * 采用URL的方式试图查找一个目录中的所有XML文件，并调用<code>readXmlStream()</code>进行解析
-	 * @param path XML文件的路径
-	 * @return 是否成功
+	 * reload the factory that read xml files again.
 	 */
-	protected boolean findResourcesByUrl(String path){
-		boolean success = false;
-		try {
-			ResourcePath resourcePath = new PathMatchResource(path, this.getClass());
-			resourcePath.setFilter(this.getFilter());
-			Resource[] loaders = resourcePath.getResources();
-			for(int i=0; i<loaders.length; i++){
-				InputStream is = loaders[i].getInputStream();
-				if(is!=null){
-					readXmlStream(is);
-					success = true;
-				}
-			}
-		} catch (SAXException e) {
-			log.debug("Error when findResourcesByUrl:"+path,e);
-		} catch (IOException e) {
-			log.debug("Error when findResourcesByUrl:"+path,e);
-		} catch (ParserConfigurationException e) {
-			log.debug("Error when findResourcesByUrl:"+path,e);
-		}
-		return success;
-	}
-	
-	/**
-	 * 用File的方式试图查找文件，并调用<code>readXmlStream()</code>解析
-	 * @param path XML文件的路径
-	 * @return 是否成功
-	 */
-	protected boolean findResourcesByFile(String path){
-		boolean success = false;
-		FileResource loader = new FileResource(new File(path));
-		loader.setFilter(this.getFilter());
-		try {
-			Resource[] loaders = loader.getResources();
-			if(loaders==null){return false;}
-			for(int i=0; i<loaders.length; i++){
-				InputStream is = loaders[i].getInputStream();
-				if(is!=null){
-					readXmlStream(is);
-					success = true;
-				}
-			}
-		} catch (IOException e) {
-			log.debug("Error when findResourcesByFile:"+path,e);
-		} catch (SAXException e) {
-			log.debug("Error when findResourcesByFile:"+path,e);
-		} catch (ParserConfigurationException e) {
-			log.debug("Error when findResourcesByFile:"+path,e);
-		}
-		return success;
+	public void reloadFactory(){
+		initFactory(this.paths);
 	}
 
 	/**
-	 * 读取并解析一个XML的文件输入流，以Element的形式获取XML的根，
-	 * 然后调用<code>buildFactory(Element)</code>构建工厂
-	 * @param inputStream 文件输入流
-	 * @throws SAXException 抛出采用SAX技术解析XML文件过程中出现的异常
-	 * @throws IOException 抛出文件读写操作过程中出现的异常
-	 * @throws ParserConfigurationException 抛出粘贴XML数据流过程中出现的异常
+	 * read the xml input stream, and then call <code>buildFactory(Element)</code>
+	 * @param inputStream
 	 */
-	protected void readXmlStream(InputStream inputStream) throws SAXException, IOException, ParserConfigurationException{
-		if(inputStream==null){
-			throw new ParserConfigurationException("Cann't parse source because of InputStream is null!");
+	protected void readXmlStream(InputStream inputStream) {
+		try {
+			if(inputStream==null) throw new RuntimeException("no input stream");
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	        factory.setValidating(this.isValidating());
+	        factory.setNamespaceAware(this.isNamespaceAware());
+	        DocumentBuilder build = factory.newDocumentBuilder();
+	        Document doc = build.parse(new InputSource(inputStream));
+	        Element root = doc.getDocumentElement();
+	        buildFactory(root);
+		} catch (IOException | ParserConfigurationException | SAXException e) {
+			throw new RuntimeException("Error when decode xml stream by sax", e);
 		}
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setValidating(this.isValidating());
-        factory.setNamespaceAware(this.isNamespaceAware());
-        DocumentBuilder build = factory.newDocumentBuilder();
-        Document doc = build.parse(new InputSource(inputStream));
-        Element root = doc.getDocumentElement();
-        buildFactory(root);
+		
 	}
 	
 	/**
-	 * 用从一个XML的文件中读取的数据构建工厂
-	 * @param root 从一个XML的文件中读取的数据的根
+	 * read from xml and build the factory.
+	 * @param root the root of the xml
 	 */
-	protected abstract void buildFactory(Element root);
+	protected void buildFactory(Element root) {
+		NodeList nodeList = root.getChildNodes();
+		for(int i=0; i<=nodeList.getLength(); i++) {
+			Node node = nodeList.item(i);
+			if(!(node instanceof Element)) continue;
+			Element element = (Element) node;
+			loadBean(element);
+		}
+	}
 	
+	/**
+	 * define what to do with each of node.
+	 * @param element
+	 */
+	protected abstract void loadBean(Element element);
 }

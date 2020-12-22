@@ -14,8 +14,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 用File来读取文件资源的代理类
- * @author 范钢
+ * search and read file with java.io.File
+ * @author fangang
  */
 public class FileResource implements Resource, ResourcePath {
 
@@ -51,8 +51,8 @@ public class FileResource implements Resource, ResourcePath {
 	}
 	
 	/**
-	 * 以<code>new FileInputStream(file)</code>的形式读取文件，
-	 * 如果文件是一个目录，则返回null。
+	 * read files with the code <code>new FileInputStream(file)</code>,
+	 * and return null if it is a directory.
 	 * @return InputStream
 	 * @exception IOException
 	 */
@@ -69,7 +69,7 @@ public class FileResource implements Resource, ResourcePath {
 	}
 	
 	/**
-	 * 以<code>File.listFiles()</code>的形式获取一个目录下的所有文件
+	 * get all of the files in the path with the method <code>File.listFiles()</code>
 	 * @return Resource[]
 	 * @exception IOException
 	 */
@@ -90,29 +90,28 @@ public class FileResource implements Resource, ResourcePath {
 		resource.setFilter(this.getFilter());
 		return new Resource[]{resource};
 	}
-	/* (non-Javadoc)
-	 * @see com.htxx.taglib.xml.Resource#getDescription()
-	 */
+	
+	@Override
 	public String getDescription() {
-		return (new StringBuffer("FileResource:[file:"))
-					.append(this.getFile()).append("]").toString();
+		try {
+			return (new StringBuffer("FileResource:[file:"))
+						.append(this.getFile().getCanonicalPath()).append("]").toString();
+		} catch (IOException e) {
+			return "";//throw new RuntimeException(e);
+		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.htxx.taglib.xml.Resource#getFilter()
-	 */
+	@Override
 	public Filter getFilter() {
 		return this.filter;
 	}
-	/* (non-Javadoc)
-	 * @see com.htxx.taglib.xml.Resource#setFilter(com.htxx.taglib.xml.Filter)
-	 */
+	
+	@Override
 	public void setFilter(Filter filter) {
 		this.filter = filter;
 	}
-	/* (non-Javadoc)
-	 * @see com.htxx.taglib.xml.Resource#getFileName()
-	 */
+	
+	@Override
 	public String getFileName() {
 		if(this.getFile()==null){return null;}
 		String fileName = this.getFile().getName();

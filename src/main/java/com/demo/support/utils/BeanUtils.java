@@ -3,8 +3,8 @@
  */
 package com.demo.support.utils;
 
-import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -23,47 +23,6 @@ import com.demo.support.exception.OrmException;
  * @author fangang
  */
 public class BeanUtils {
-	
-	/**
-	 * create an entity by class name.
-	 * @param className
-	 * @return the entity
-	 */
-	public static <S extends Serializable> Entity<S> createEntity(String className) {
-		try {
-			@SuppressWarnings("unchecked")
-			Class<? extends Entity<S>> clazz = (Class<? extends Entity<S>>) Class.forName(className).asSubclass(Entity.class);
-			Entity<S> entity = createEntity(clazz);
-			return entity;
-		} catch (ClassNotFoundException e) {
-			throw new OrmException("error because the entity["+className+"] must exits and extends the class [Entity]", e);
-		}
-	}
-	
-	/**
-	 * create an entity by class name.
-	 * @param className
-	 * @return the entity
-	 */
-	public static <S extends Serializable> Entity<S> createEntity(String className, S id) {
-		Entity<S> entity = createEntity(className);
-		entity.setId(id);
-		return entity;
-	}
-	
-	/**
-	 * create an entity by class
-	 * @param clazz
-	 * @return the entity
-	 */
-	public static <S extends Serializable> Entity<S> createEntity(Class<? extends Entity<S>> clazz) {
-		try {
-			return clazz.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
-			throw new OrmException("error when instance the entity["+clazz.getName()+"]", e);
-		}
-	}
-	
 	/**
 	 * get the value from a bean by field name.
 	 * @param bean
@@ -131,6 +90,7 @@ public class BeanUtils {
 	 * @param value
 	 * @return the downcast value
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Object bind(Type type, Object value) {
 		if(value==null) return value;
 		if(type instanceof Class) {
@@ -151,6 +111,10 @@ public class BeanUtils {
 				List<String> listOfStr = Arrays.asList(str.split(","));
 				return (clazz.equals(List.class)) ? listOfStr : new HashSet<String>(listOfStr);
 			}
+			
+			if(EntityUtils.isEntity(clazz)) 
+				return EntityUtils.bindEntity((Class<Entity>)clazz, str);
+			
 			//TODO do nothing with other types
 		} else if(type instanceof ParameterizedType) {
 			ParameterizedType pt = (ParameterizedType)type;
@@ -169,6 +133,7 @@ public class BeanUtils {
 	 * @param str the value
 	 * @return the downcast value
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static Object bindListOrSet(ParameterizedType pt, String str) {
 		Class<?> clazz = (Class<?>)pt.getRawType();
 		List<String> listOfStr = Arrays.asList(str.split(","));
@@ -189,9 +154,12 @@ public class BeanUtils {
 				return convert(listOfStr, clazz, s->{return new Short(s);});
 			
 			if(ataClazz.equals(Date.class)&&listOfStr.get(0).length()==10)
-				return convert(listOfStr, clazz, s->{return DateUtils.getDate(str,"yyyy-MM-dd");});
+				return convert(listOfStr, clazz, s->{return DateUtils.getDate(s,"yyyy-MM-dd");});
 			if(ataClazz.equals(Date.class))
-				return convert(listOfStr, clazz, s->{return DateUtils.getDate(str,"yyyy-MM-dd HH:mm:ss");});
+				return convert(listOfStr, clazz, s->{return DateUtils.getDate(s,"yyyy-MM-dd HH:mm:ss");});
+			
+			if(EntityUtils.isEntity(ataClazz))
+				return EntityUtils.bindListOrSetOfEntity((Class<Entity>)ataClazz, str);
 		} else {
 			//TODO do nothing other types.
 		}
@@ -215,5 +183,23 @@ public class BeanUtils {
 	@FunctionalInterface
 	interface NewInstance<T> {
 		T apply(String s);
+	}
+	
+	/**
+	 * get the method of the service by name, using reflect.
+	 * @param service
+	 * @param methodName the name of the method
+	 * @return the reference of the method
+	 */
+	public static Method getMethod(Object obj, String methodName) {
+		if(methodName==null||methodName.isEmpty()) throw new OrmException("The method name is empty!");
+		Method[] allOfMethods = obj.getClass().getDeclaredMethods();
+		Method rtn = null;
+		for(Method method : allOfMethods) {
+			if(method.getName().equals(methodName)) 
+				if(rtn==null||(rtn.getParameterTypes().length>0&&rtn.getParameterTypes()[0].isAssignableFrom(method.getParameterTypes()[0]))) rtn = method;
+		}
+		if(rtn!=null) return rtn; //if have override, return the last one.
+		throw new OrmException("No such method["+methodName+"] in the Object["+obj.getClass().getName()+"]");
 	}
 }

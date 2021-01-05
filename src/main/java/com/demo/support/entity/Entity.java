@@ -15,7 +15,7 @@ import com.demo.support.utils.BeanUtils;
  * The abstract class for all of entity.
  * @author fangang
  */
-public abstract class Entity<T extends Serializable> implements Serializable {
+public abstract class Entity<T extends Serializable> implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = 2554469201774584779L;
 	/**
@@ -96,5 +96,15 @@ public abstract class Entity<T extends Serializable> implements Serializable {
 		for(int i=0; i<exclude.length ;i++)
 			if(exclude[i].equals(field)||"serialVersionUID".equals(field)) return true;
 		return false;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Entity<T> clone() {
+		try {
+			return (Entity<T>) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

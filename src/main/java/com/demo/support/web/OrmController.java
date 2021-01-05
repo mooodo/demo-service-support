@@ -3,13 +3,10 @@
  */
 package com.demo.support.web;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -26,8 +23,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.demo.support.entity.Entity;
 import com.demo.support.exception.OrmException;
 import com.demo.support.utils.BeanUtils;
+import com.demo.support.utils.EntityUtils;
 
 /**
  * The generate controller for CRUD operations by ORM
@@ -105,44 +104,15 @@ public class OrmController {
 	 * @param json
 	 * @return the value object with it's data.
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Object getValueObj(Method method, Map<String, String> json) {
 		if(json==null||json.isEmpty()) return null;
 		Class<?>[] allOfParameterTypes = method.getParameterTypes();
 		if(allOfParameterTypes.length==0) return null;
 		Class<?> firstOfParameterType = allOfParameterTypes[0];
-		if(!isValueObject(firstOfParameterType)) return null;
-		try {
-			Object vo = firstOfParameterType.newInstance();
-			Field[] allOfFields = vo.getClass().getDeclaredFields();
-			for(Field field : allOfFields) {
-				field.setAccessible(true);
-				Class<?> clazz = field.getType();
-				String value = json.get(field.getName());
-				if(value!=null) field.set(vo, BeanUtils.bind(clazz, value));
-				field.setAccessible(false);
-			}
-			return vo;
-		} catch (InstantiationException | IllegalAccessException e) {
-			throw new OrmException("error when creating the value object by reflect", e);
-		}
-	}
-	
-	/**
-	 * check a parameter whether is a value object.
-	 * @param clazz
-	 * @return yes or no
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 */
-	private boolean isValueObject(Class<?> clazz) {
-		if(clazz==null) return false;
-		if(clazz.equals(long.class)||clazz.equals(int.class)||clazz.equals(double.class)||clazz.equals(float.class)||clazz.equals(short.class)) return false;
-		if(clazz.isInterface()) return false;
-		if(Number.class.isAssignableFrom(clazz)) return false;
-		if(String.class.isAssignableFrom(clazz)) return false;
-		if(Date.class.isAssignableFrom(clazz)) return false;
-		if(Collection.class.isAssignableFrom(clazz)) return false;
-		return true;
+		
+		if(!EntityUtils.isEntity(firstOfParameterType)) return null;
+		return EntityUtils.createEntity((Class<Entity>)firstOfParameterType, json);
 	}
 	
 	/**

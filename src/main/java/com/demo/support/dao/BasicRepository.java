@@ -3,6 +3,7 @@
  */
 package com.demo.support.dao;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,8 +18,8 @@ import com.demo.support.xml.XmlBuildFactoryTemplate;
 /**
  * @author fangang
  */
-public abstract class BasicRepository<T extends Entity<String>> extends XmlBuildFactoryTemplate {
-	private Map<String, T> map = new HashMap<>();
+public abstract class BasicRepository<T extends Entity<S>, S extends Serializable> extends XmlBuildFactoryTemplate {
+	private Map<S, T> map = new HashMap<>();
 	private Class<T> clazz;
 	
 	/**
@@ -66,11 +67,25 @@ public abstract class BasicRepository<T extends Entity<String>> extends XmlBuild
 	}
 	
 	/**
+	 * @param bean
+	 */
+	public void insert(T bean) {
+		save(bean);
+	}
+	
+	/**
+	 * @param bean
+	 */
+	public void update(T bean) {
+		save(bean);
+	}
+	
+	/**
 	 * save the bean.
 	 * @param bean
 	 */
 	public void save(T bean) {
-		String id = bean.getId();
+		S id = bean.getId();
 		map.put(id, bean);
 	}
 	
@@ -78,7 +93,7 @@ public abstract class BasicRepository<T extends Entity<String>> extends XmlBuild
 	 * delete by id.
 	 * @param id
 	 */
-	public void delete(String id) {
+	public void delete(S id) {
 		map.remove(id);
 	}
 	
@@ -86,7 +101,7 @@ public abstract class BasicRepository<T extends Entity<String>> extends XmlBuild
 	 * @param id
 	 * @return get by id
 	 */
-	public T get(String id) {
+	public T get(S id) {
 		return map.get(id);
 	}
 	
